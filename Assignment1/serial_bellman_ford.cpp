@@ -16,6 +16,7 @@ using std::cout;
 using std::endl;
 
 #define INF 1000000
+#define DEBUG
 
 /**
  * utils is a namespace for utility functions
@@ -90,8 +91,17 @@ void bellman_ford(int n, int *mat, int *dist, bool *has_negative_cycle) {
                 int weight = mat[utils::convert_dimension_2D_1D(u, v, n)];
                 if (weight < INF) {//test if u--v has an edge
                     if (dist[u] + weight < dist[v]) {
+#ifdef DEBUG
+                        std::cout << " i " << i << " u " << u << " v " << v << std::endl;
+#endif
                         has_change = true;
                         dist[v] = dist[u] + weight;
+#ifdef DEBUG
+                        std::cout << " dist ";
+                        for (int j = 0; j < n; j++)
+                            cout << " " << dist[j] << " ";
+                        std::cout << std::endl;
+#endif
                     }
                 }
             }
