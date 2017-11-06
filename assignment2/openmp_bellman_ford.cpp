@@ -1,7 +1,7 @@
 /**
- * Name:
- * Student id:
- * ITSC email:
+ * Name: DING, Mu Cong
+ * Student id: 20323458
+ * ITSC email: mcding@connect.ust.hk
  */
 /*
  * This is a openmp version of bellman_ford algorithm
@@ -88,17 +88,50 @@ namespace utils {
  * @param *has_negative_cycle a bool variable to recode if there are negative cycles
 */
 void bellman_ford(int p, int n, int *mat, int *dist, bool *has_negative_cycle) {
-    //------your code starts from here------
+    //initialize results
+    *has_negative_cycle = false;
+    int i;
+#pragma omp parallel for num_threads(p) \
+        default(none) shared(dist, n) private(i) schedule(guided, 1)
+    for (i = 0; i < n; i++) {
+        dist[i] = INF;
+    }
+    //root vertex always has distance 0
+    dist[0] = 0;
 
-    //step 1: set openmp thread number
+    //a flag to record if there is any distance change in this iteration
+    bool has_change;
+    int u, v, weight;
+    //bellman-ford edge relaxation
+    for (i = 0; i < n - 1; i++) {// n - 1 iteration
+        has_change = false;
+#pragma omp parallel for num_threads(p) \
+        default(none) shared(mat, dist, n, has_change) private(u, v, weight) schedule(guided, 1) collapse(2)
+        for (u = 0; u < n; u++) {
+            for (v = 0; v < n; v++) {
+                weight = mat[utils::convert_dimension_2D_1D(u, v, n)];
+                if (dist[u] + weight < dist[v]) {
+                    has_change = true;
+                    dist[v] = dist[u] + weight;
+                }
+            }
+        }
+        //if there is no change in this iteration, then we have finished
+        if (!has_change) {
+            return;
+        }
+    }
 
-    //step 2: find local task range
-   
-    //step 3: bellman-ford algorithm
-   
-    //step 4: free memory (if any)
-   
-    //------end of your code------
+    //do one more iteration to check negative cycles
+    for (u = 0; u < n; u++) {
+        for (v = 0; v < n; v++) {
+            weight = mat[utils::convert_dimension_2D_1D(u, v, n)];
+            if (dist[u] + weight < dist[v]) { // if we can relax one more step, then we find a negative cycle
+                *has_negative_cycle = true;
+                return;
+            }
+        }
+    }
 }
 
 int main(int argc, char **argv) {
