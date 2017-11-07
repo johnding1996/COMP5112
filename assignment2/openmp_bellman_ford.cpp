@@ -110,9 +110,11 @@ void bellman_ford(int p, int n, int *mat, int *dist, bool *has_negative_cycle) {
         for (u = 0; u < n; u++) {
             for (v = 0; v < n; v++) {
                 weight = mat[utils::convert_dimension_2D_1D(u, v, n)];
-                if (dist[u] + weight < dist[v]) {
-                    has_change = true;
-                    dist[v] = dist[u] + weight;
+                if (weight < INF) {//test if u--v has an edge
+                    if (dist[u] + weight < dist[v]) {
+                        has_change = true;
+                        dist[v] = dist[u] + weight;
+                    }
                 }
             }
         }
@@ -126,9 +128,11 @@ void bellman_ford(int p, int n, int *mat, int *dist, bool *has_negative_cycle) {
     for (u = 0; u < n; u++) {
         for (v = 0; v < n; v++) {
             weight = mat[utils::convert_dimension_2D_1D(u, v, n)];
-            if (dist[u] + weight < dist[v]) { // if we can relax one more step, then we find a negative cycle
-                *has_negative_cycle = true;
-                return;
+            if (weight < INF) {
+                if (dist[u] + weight < dist[v]) { // if we can relax one more step, then we find a negative cycle
+                    *has_negative_cycle = true;
+                    return;
+                }
             }
         }
     }
