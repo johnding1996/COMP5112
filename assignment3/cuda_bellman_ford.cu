@@ -176,7 +176,7 @@ void bellman_ford(int blocksPerGrid, int threadsPerBlock, int n, int *mat, int *
 		gpuErrchk(cudaDeviceSynchronize())
         bool has_change;
         gpuErrchk(cudaMemcpy(&has_change, d_has_change, sizeof(bool), cudaMemcpyDeviceToHost));
-        if(!has_change) return;
+        if(!has_change) break;
 	}
 
 	//copy results from device to host
