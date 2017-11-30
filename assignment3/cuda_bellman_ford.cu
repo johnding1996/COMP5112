@@ -182,7 +182,8 @@ void bellman_ford(int blocksPerGrid, int threadsPerBlock, int n, int *mat, int *
 	//bellman-ford edge relaxation
     bool has_change;
 	for (int i = 0; i < n - 1; i++) {// n - 1 iteration
-        CHECK(cudaMemset(d_has_change, 0, sizeof(bool)));
+        has_change = false;
+        CHECK(cudaMemcpy(d_has_change, &has_change, sizeof(bool), cudaMemcpyHostToDevice));
         BellmanIteration << < blocks, threads >> > (d_n, d_mat, d_dist, d_has_change);
         //force synchronization before next iteration
 		CHECK(cudaDeviceSynchronize())
@@ -191,7 +192,8 @@ void bellman_ford(int blocksPerGrid, int threadsPerBlock, int n, int *mat, int *
 	}
 
     //do one more iteration to check negative cycles
-    CHECK(cudaMemset(d_has_negative_cycle, 0, sizeof(bool)));
+    bool _has_negative_cycle = false;
+    CHECK(cudaMemcpy(d_has_negative_cycle, &_has_negative_cycle, sizeof(bool), cudaMemcpyHostToDevice));
     CheckNegativeCycle << < blocks, threads >> > (d_n, d_mat, d_dist, d_has_negative_cycle);
 
 	//copy results from device to host
