@@ -36,8 +36,8 @@
       <file leaf-file-name="cuda_bellman_ford.cu" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/cuda_bellman_ford.cu">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="414">
-              <caret line="174" column="45" lean-forward="true" selection-start-line="174" selection-start-column="45" selection-end-line="174" selection-end-column="45" />
+            <state relative-caret-position="1243">
+              <caret line="162" column="29" lean-forward="true" selection-start-line="162" selection-start-column="29" selection-end-line="162" selection-end-column="29" />
               <folding />
             </state>
           </provider>
@@ -58,6 +58,7 @@
   <component name="FindInProjectRecents">
     <findStrings>
       <find>read_file</find>
+      <find>test</find>
     </findStrings>
   </component>
   <component name="IdeDocumentHistory">
@@ -307,12 +308,12 @@
       <updated>1512014896631</updated>
       <workItem from="1512014901417" duration="5411000" />
       <workItem from="1512027266487" duration="2000" />
-      <workItem from="1512027282923" duration="423000" />
+      <workItem from="1512027282923" duration="548000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="5836000" />
+    <option name="totallyTimeSpent" value="5961000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="65" y="-4" width="1855" height="1084" extended-state="6" />
@@ -419,8 +420,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/cuda_bellman_ford.cu">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="414">
-          <caret line="174" column="45" lean-forward="true" selection-start-line="174" selection-start-column="45" selection-end-line="174" selection-end-column="45" />
+        <state relative-caret-position="1243">
+          <caret line="162" column="29" lean-forward="true" selection-start-line="162" selection-start-column="29" selection-end-line="162" selection-end-column="29" />
           <folding />
         </state>
       </provider>

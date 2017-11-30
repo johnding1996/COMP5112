@@ -110,14 +110,10 @@ int print_result(bool has_negative_cycle, int *dist) {
 /**
  * function: BellmanIteration
  */
-__global__ void BellmanIteration(int *d_n, int *d_mat, int *d_dist, bool *d_has_change, int *d_test) {
+__global__ void BellmanIteration(int *d_n, int *d_mat, int *d_dist, bool *d_has_change) {
 	int tid = blockDim.x * blockIdx.x + threadIdx.x;
 	int elementSkip = blockDim.x * gridDim.x;
-
     int n = *d_n;
-	printf("LOG: %d, %d, %d\n", tid, elementSkip, n);
-    *d_test = *d_test + 1;
-
 	for (int i = tid; i < n * n; i += elementSkip) {
 		int weight = d_mat[i];
 		int u = i / n;
@@ -154,13 +150,11 @@ void bellman_ford(int blocksPerGrid, int threadsPerBlock, int n, int *mat, int *
     int *d_n;
 	int *d_mat, *d_dist;
     bool *d_has_change, *d_has_negative_cycle;
-    int *d_test;
     gpuErrchk(cudaMalloc(&d_n, sizeof(int)));
 	gpuErrchk(cudaMalloc(&d_mat, sizeof(int) * n * n));
 	gpuErrchk(cudaMalloc(&d_dist, sizeof(int) * n));
     gpuErrchk(cudaMalloc(&d_has_change, sizeof(bool)));
     gpuErrchk(cudaMalloc(&d_has_negative_cycle, sizeof(bool)));
-    gpuErrchk(cudaMalloc(&d_test, sizeof(int)));
 
 	//initialization and copy data from host to device
 	for (int i = 0; i < n; i++) {
@@ -174,16 +168,12 @@ void bellman_ford(int blocksPerGrid, int threadsPerBlock, int n, int *mat, int *
 	gpuErrchk(cudaMemcpy(d_dist, dist, sizeof(int) * n, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemset(d_has_change, 0, sizeof(bool)));
 	gpuErrchk(cudaMemset(d_has_negative_cycle, 0, sizeof(bool)));
-	gpuErrchk(cudaMemset(d_test, 0, sizeof(int)));
 
 
 	//bellman-ford edge relaxation
 	for (int i = 0; i < n - 1; i++) {// n - 1 iteration
-		BellmanIteration << < blocks, threads >> > (d_n, d_mat, d_dist, d_has_change, d_test);
-		gpuErrchk(cudaDeviceSynchronize()); //only for debug
-		int test;
-        gpuErrchk(cudaMemcpy(&test, d_test, sizeof(bool), cudaMemcpyDeviceToHost));
-		printf("%d\n", test);
+		BellmanIteration << < blocks, threads >> > (d_n, d_mat, d_dist, d_has_change);
+		//gpuErrchk(cudaDeviceSynchronize()); //only for debug
 	}
 
 	//copy results from device to host
