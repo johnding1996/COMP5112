@@ -107,11 +107,6 @@ int print_result(bool has_negative_cycle, int *dist) {
 
 // you may add some helper/kernel functions here.
 
-__device__ int d_n;
-__device__ bool d_has_negative_cycle;
-__device__ bool d_has_change;
-__device__ int d_test;
-
 /**
  * function: BellmanIteration
  */
@@ -155,9 +150,16 @@ void bellman_ford(int blocksPerGrid, int threadsPerBlock, int n, int *mat, int *
 	dim3 threads(threadsPerBlock);
 
 	//allocate memory
+    int *d_n;
 	int *d_mat, *d_dist;
+    bool *d_has_change, *d_has_negative_cycle;
+    int *d_test;
+    gpuErrchk(cudaMalloc(&d_n, sizeof(int)));
 	gpuErrchk(cudaMalloc(&d_mat, sizeof(int) * n * n));
 	gpuErrchk(cudaMalloc(&d_dist, sizeof(int) * n));
+    gpuErrchk(cudaMalloc(&d_has_change, sizeof(bool)));
+    gpuErrchk(cudaMalloc(&d_has_negative_cycle, sizeof(bool)));
+    gpuErrchk(cudaMalloc(&d_test, sizeof(int)));
 
 	//initialization and copy data from host to device
 	for (int i = 0; i < n; i++) {
@@ -169,9 +171,9 @@ void bellman_ford(int blocksPerGrid, int threadsPerBlock, int n, int *mat, int *
 	gpuErrchk(cudaMemcpyToSymbol(d_n, &n, sizeof(int), 0, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_mat, mat, sizeof(int) * n * n, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_dist, dist, sizeof(int) * n, cudaMemcpyHostToDevice));
-	gpuErrchk(cudaMemset(&d_has_change, 0, sizeof(bool)));
-	gpuErrchk(cudaMemset(&d_has_negative_cycle, 0, sizeof(bool)));
-	gpuErrchk(cudaMemset(&d_test, 0, sizeof(int)));
+	gpuErrchk(cudaMemset(d_has_change, 0, sizeof(bool)));
+	gpuErrchk(cudaMemset(d_has_negative_cycle, 0, sizeof(bool)));
+	gpuErrchk(cudaMemset(d_test, 0, sizeof(int)));
 
 
 	//bellman-ford edge relaxation
@@ -179,13 +181,13 @@ void bellman_ford(int blocksPerGrid, int threadsPerBlock, int n, int *mat, int *
 		BellmanIteration << < blocks, threads >> > (d_mat, d_dist);
 		gpuErrchk(cudaDeviceSynchronize()); //only for debug
 		int test;
-		gpuErrchk(cudaMemcpyFromSymbol(&test, d_test, sizeof(int), cudaMemcpyDeviceToHost));
+        gpuErrchk(cudaMemcpy(&test, d_test, sizeof(bool), cudaMemcpyDeviceToHost));
 		printf("%d\n", test);
 	}
 
 	//copy results from device to host
 	gpuErrchk(cudaMemcpy(dist, d_dist, sizeof(int) * n, cudaMemcpyDeviceToHost));
-	gpuErrchk(cudaMemcpyFromSymbol(has_negative_cycle, d_has_negative_cycle, sizeof(bool), cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(has_negative_cycle, d_has_negative_cycle, sizeof(bool), cudaMemcpyDeviceToHost));
 
 	//free memory
 	gpuErrchk(cudaFree(d_mat));
