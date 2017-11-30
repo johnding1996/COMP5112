@@ -118,13 +118,33 @@ __global__ void BellmanIteration(int *d_n, int *d_mat, int *d_dist, bool *d_has_
 		int weight = d_mat[i];
 		int u = i / n;
 		int v = i - n * u;
-		if (weight < 1000000) {//test if u--v has an edge
+		if (weight < INF) {//test if u--v has an edge
 			if (d_dist[u] + weight < d_dist[v]) {
 				*d_has_change = true;
 				d_dist[v] = d_dist[u] + weight;
 			}
 		}
 	}
+}
+
+/**
+ * function: CheckNegativeCycle
+ */
+__global__ void CheckNegativeCycle(int *d_n, int *d_mat, int *d_dist, bool *d_has_negative_cycle) {
+    int tid = blockDim.x * blockIdx.x + threadIdx.x;
+    int elementSkip = blockDim.x * gridDim.x;
+    int n = *d_n;
+    for (int i = tid; i < n * n; i += elementSkip) {
+        int weight = d_mat[i];
+        int u = i / n;
+        int v = i - n * u;
+        if (weight < INF) {//test if u--v has an edge
+            if (d_dist[u] + weight < d_dist[v]) {
+                *d_has_negative_cycle = true;
+                return;
+            }
+        }
+    }
 }
 
 /**
@@ -160,14 +180,11 @@ void bellman_ford(int blocksPerGrid, int threadsPerBlock, int n, int *mat, int *
 	for (int i = 0; i < n; i++) {
 		dist[i] = INF;
 	}
-	//root vertex always has distance 0
 	dist[0] = 0;
 
 	gpuErrchk(cudaMemcpy(d_n, &n, sizeof(int), cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_mat, mat, sizeof(int) * n * n, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_dist, dist, sizeof(int) * n, cudaMemcpyHostToDevice));
-	gpuErrchk(cudaMemset(d_has_negative_cycle, 0, sizeof(bool)));
-
 
 	//bellman-ford edge relaxation
 	for (int i = 0; i < n - 1; i++) {// n - 1 iteration
@@ -178,6 +195,10 @@ void bellman_ford(int blocksPerGrid, int threadsPerBlock, int n, int *mat, int *
         gpuErrchk(cudaMemcpy(&has_change, d_has_change, sizeof(bool), cudaMemcpyDeviceToHost));
         if(!has_change) break;
 	}
+
+    //do one more iteration to check negative cycles
+    gpuErrchk(cudaMemset(d_has_negative_cycle, 0, sizeof(bool)));
+    CheckNegativeCycle << < blocks, threads >> > (d_n, d_mat, d_dist, d_has_negative_cycle);
 
 	//copy results from device to host
 	gpuErrchk(cudaMemcpy(dist, d_dist, sizeof(int) * n, cudaMemcpyDeviceToHost));
