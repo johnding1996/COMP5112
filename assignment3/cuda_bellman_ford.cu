@@ -110,20 +110,21 @@ int print_result(bool has_negative_cycle, int *dist) {
 /**
  * function: BellmanIteration
  */
-__global__ void BellmanIteration(int *d_mat, int *d_dist) {
+__global__ void BellmanIteration(int *d_n, int *d_mat, int *d_dist, bool *d_has_change, int *d_test) {
 	int tid = blockDim.x * blockIdx.x + threadIdx.x;
 	int elementSkip = blockDim.x * gridDim.x;
 
-	printf("LOG: %d, %d, %d\n", tid, elementSkip, d_n);
-	d_test++;
+    int n = *d_n;
+	printf("LOG: %d, %d, %d\n", tid, elementSkip, n);
+    *d_test = *d_test + 1;
 
-	for (int i = tid; i < d_n * d_n; i += elementSkip) {
+	for (int i = tid; i < n * n; i += elementSkip) {
 		int weight = d_mat[i];
-		int u = i / d_n;
-		int v = i - d_n * u;
+		int u = i / n;
+		int v = i - n * u;
 		if (weight < 1000000) {//test if u--v has an edge
 			if (d_dist[u] + weight < d_dist[v]) {
-				d_has_change = true;
+				*d_has_change = true;
 				d_dist[v] = d_dist[u] + weight;
 			}
 		}
@@ -178,7 +179,7 @@ void bellman_ford(int blocksPerGrid, int threadsPerBlock, int n, int *mat, int *
 
 	//bellman-ford edge relaxation
 	for (int i = 0; i < n - 1; i++) {// n - 1 iteration
-		BellmanIteration << < blocks, threads >> > (d_mat, d_dist);
+		BellmanIteration << < blocks, threads >> > (d_n, d_mat, d_dist, d_has_change, d_test);
 		gpuErrchk(cudaDeviceSynchronize()); //only for debug
 		int test;
         gpuErrchk(cudaMemcpy(&test, d_test, sizeof(bool), cudaMemcpyDeviceToHost));
