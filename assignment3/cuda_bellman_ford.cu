@@ -169,7 +169,7 @@ void bellman_ford(int blocksPerGrid, int threadsPerBlock, int n, int *mat, int *
 	//root vertex always has distance 0
 	dist[0] = 0;
 
-	gpuErrchk(cudaMemcpyToSymbol(d_n, &n, sizeof(int), 0, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_n, &n, sizeof(int), 0, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_mat, mat, sizeof(int) * n * n, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_dist, dist, sizeof(int) * n, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemset(d_has_change, 0, sizeof(bool)));

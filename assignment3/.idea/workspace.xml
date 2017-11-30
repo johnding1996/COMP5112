@@ -36,8 +36,8 @@
       <file leaf-file-name="cuda_bellman_ford.cu" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/cuda_bellman_ford.cu">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="594">
-              <caret line="184" column="66" lean-forward="true" selection-start-line="184" selection-start-column="66" selection-end-line="184" selection-end-column="66" />
+            <state relative-caret-position="-234">
+              <caret line="171" column="31" lean-forward="true" selection-start-line="171" selection-start-column="31" selection-end-line="171" selection-end-column="31" />
               <folding />
             </state>
           </provider>
@@ -307,12 +307,12 @@
       <updated>1512014896631</updated>
       <workItem from="1512014901417" duration="5411000" />
       <workItem from="1512027266487" duration="2000" />
-      <workItem from="1512027282923" duration="323000" />
+      <workItem from="1512027282923" duration="374000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="5736000" />
+    <option name="totallyTimeSpent" value="5787000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="65" y="-4" width="1855" height="1084" extended-state="6" />
@@ -419,8 +419,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/cuda_bellman_ford.cu">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="594">
-          <caret line="184" column="66" lean-forward="true" selection-start-line="184" selection-start-column="66" selection-end-line="184" selection-end-column="66" />
+        <state relative-caret-position="-234">
+          <caret line="171" column="31" lean-forward="true" selection-start-line="171" selection-start-column="31" selection-end-line="171" selection-end-column="31" />
           <folding />
         </state>
       </provider>
