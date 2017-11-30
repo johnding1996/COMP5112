@@ -166,14 +166,17 @@ void bellman_ford(int blocksPerGrid, int threadsPerBlock, int n, int *mat, int *
 	gpuErrchk(cudaMemcpy(d_n, &n, sizeof(int), cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_mat, mat, sizeof(int) * n * n, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_dist, dist, sizeof(int) * n, cudaMemcpyHostToDevice));
-	gpuErrchk(cudaMemset(d_has_change, 0, sizeof(bool)));
 	gpuErrchk(cudaMemset(d_has_negative_cycle, 0, sizeof(bool)));
 
 
 	//bellman-ford edge relaxation
 	for (int i = 0; i < n - 1; i++) {// n - 1 iteration
-		BellmanIteration << < blocks, threads >> > (d_n, d_mat, d_dist, d_has_change);
-		//gpuErrchk(cudaDeviceSynchronize()); //only for debug
+        gpuErrchk(cudaMemset(d_has_change, 0, sizeof(bool)));
+        BellmanIteration << < blocks, threads >> > (d_n, d_mat, d_dist, d_has_change);
+		gpuErrchk(cudaDeviceSynchronize())
+        bool has_change;
+        gpuErrchk(cudaMemcpy(&has_change, d_has_change, sizeof(bool), cudaMemcpyDeviceToHost));
+        if(!has_change) return;
 	}
 
 	//copy results from device to host
