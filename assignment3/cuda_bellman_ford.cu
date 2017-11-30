@@ -27,17 +27,6 @@ using std::endl;
 
 #define INF 1000000
 
-
-#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
-inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
-{
-	if (code != cudaSuccess)
-	{
-		fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
-		if (abort) exit(code);
-	}
-}
-
 /*
  * This is a CHECK function to check CUDA calls
  */
@@ -52,7 +41,6 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 				exit(1);                                                               \
 	}                                                                          \
 		}
-
 
 /**
  * utils is a namespace for utility functions
@@ -109,6 +97,10 @@ int print_result(bool has_negative_cycle, int *dist) {
 
 /**
  * function: BellmanIteration
+ * @param d_n pointer to n on device
+ * @param d_mat pointer to mat on device
+ * @param d_dist pointer to dist on device
+ * @param d_has_change pointer to has_change on device
  */
 __global__ void BellmanIteration(int *d_n, int *d_mat, int *d_dist, bool *d_has_change) {
 	int tid = blockDim.x * blockIdx.x + threadIdx.x;
@@ -129,6 +121,10 @@ __global__ void BellmanIteration(int *d_n, int *d_mat, int *d_dist, bool *d_has_
 
 /**
  * function: CheckNegativeCycle
+ * @param d_n pointer to n on device
+ * @param d_mat pointer to mat on device
+ * @param d_dist pointer to dist on device
+ * @param d_has_negative_cycle pointer to has_negative_cycle on device
  */
 __global__ void CheckNegativeCycle(int *d_n, int *d_mat, int *d_dist, bool *d_has_negative_cycle) {
     int tid = blockDim.x * blockIdx.x + threadIdx.x;
@@ -170,43 +166,45 @@ void bellman_ford(int blocksPerGrid, int threadsPerBlock, int n, int *mat, int *
     int *d_n;
 	int *d_mat, *d_dist;
     bool *d_has_change, *d_has_negative_cycle;
-    gpuErrchk(cudaMalloc(&d_n, sizeof(int)));
-	gpuErrchk(cudaMalloc(&d_mat, sizeof(int) * n * n));
-	gpuErrchk(cudaMalloc(&d_dist, sizeof(int) * n));
-    gpuErrchk(cudaMalloc(&d_has_change, sizeof(bool)));
-    gpuErrchk(cudaMalloc(&d_has_negative_cycle, sizeof(bool)));
+    CHECK(cudaMalloc(&d_n, sizeof(int)));
+	CHECK(cudaMalloc(&d_mat, sizeof(int) * n * n));
+	CHECK(cudaMalloc(&d_dist, sizeof(int) * n));
+    CHECK(cudaMalloc(&d_has_change, sizeof(bool)));
+    CHECK(cudaMalloc(&d_has_negative_cycle, sizeof(bool)));
 
 	//initialization and copy data from host to device
-	for (int i = 0; i < n; i++) {
-		dist[i] = INF;
-	}
+	for (int i = 0; i < n; i++) dist[i] = INF;
 	dist[0] = 0;
-
-	gpuErrchk(cudaMemcpy(d_n, &n, sizeof(int), cudaMemcpyHostToDevice));
-	gpuErrchk(cudaMemcpy(d_mat, mat, sizeof(int) * n * n, cudaMemcpyHostToDevice));
-	gpuErrchk(cudaMemcpy(d_dist, dist, sizeof(int) * n, cudaMemcpyHostToDevice));
+	CHECK(cudaMemcpy(d_n, &n, sizeof(int), cudaMemcpyHostToDevice));
+	CHECK(cudaMemcpy(d_mat, mat, sizeof(int) * n * n, cudaMemcpyHostToDevice));
+	CHECK(cudaMemcpy(d_dist, dist, sizeof(int) * n, cudaMemcpyHostToDevice));
 
 	//bellman-ford edge relaxation
+    bool has_change;
 	for (int i = 0; i < n - 1; i++) {// n - 1 iteration
-        gpuErrchk(cudaMemset(d_has_change, 0, sizeof(bool)));
+        CHECK(cudaMemset(d_has_change, 0, sizeof(bool)));
         BellmanIteration << < blocks, threads >> > (d_n, d_mat, d_dist, d_has_change);
-		gpuErrchk(cudaDeviceSynchronize())
-        bool has_change;
-        gpuErrchk(cudaMemcpy(&has_change, d_has_change, sizeof(bool), cudaMemcpyDeviceToHost));
+        //force synchronization before next iteration
+		CHECK(cudaDeviceSynchronize())
+        CHECK(cudaMemcpy(&has_change, d_has_change, sizeof(bool), cudaMemcpyDeviceToHost));
         if(!has_change) break;
 	}
 
     //do one more iteration to check negative cycles
-    gpuErrchk(cudaMemset(d_has_negative_cycle, 0, sizeof(bool)));
+    CHECK(cudaMemset(d_has_negative_cycle, 0, sizeof(bool)));
     CheckNegativeCycle << < blocks, threads >> > (d_n, d_mat, d_dist, d_has_negative_cycle);
 
 	//copy results from device to host
-	gpuErrchk(cudaMemcpy(dist, d_dist, sizeof(int) * n, cudaMemcpyDeviceToHost));
-	gpuErrchk(cudaMemcpy(has_negative_cycle, d_has_negative_cycle, sizeof(bool), cudaMemcpyDeviceToHost));
+	CHECK(cudaMemcpy(dist, d_dist, sizeof(int) * n, cudaMemcpyDeviceToHost));
+	CHECK(cudaMemcpy(has_negative_cycle, d_has_negative_cycle, sizeof(bool), cudaMemcpyDeviceToHost));
 
 	//free memory
-	gpuErrchk(cudaFree(d_mat));
-	gpuErrchk(cudaFree(d_dist));
+    CHECK(cudaFree(d_n));
+	CHECK(cudaFree(d_mat));
+	CHECK(cudaFree(d_dist));
+    CHECK(cudaFree(d_has_change));
+    CHECK(cudaFree(d_has_negative_cycle));
+
 	//------end of your code------
 }
 

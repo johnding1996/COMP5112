@@ -23,21 +23,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="cuda_dijkstra_solution.cu" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/cuda_dijkstra_solution.cu">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="917">
-              <caret line="247" column="13" lean-forward="false" selection-start-line="247" selection-start-column="13" selection-end-line="247" selection-end-column="13" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="cuda_bellman_ford.cu" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/cuda_bellman_ford.cu">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="471">
-              <caret line="202" column="29" lean-forward="false" selection-start-line="202" selection-start-column="29" selection-end-line="202" selection-end-column="29" />
+            <state relative-caret-position="-343">
+              <caret line="186" column="26" lean-forward="false" selection-start-line="186" selection-start-column="26" selection-end-line="186" selection-end-column="26" />
               <folding />
             </state>
           </provider>
@@ -309,12 +299,12 @@
       <updated>1512014896631</updated>
       <workItem from="1512014901417" duration="5411000" />
       <workItem from="1512027266487" duration="2000" />
-      <workItem from="1512027282923" duration="1385000" />
+      <workItem from="1512027282923" duration="1927000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="6798000" />
+    <option name="totallyTimeSpent" value="7340000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="65" y="-4" width="1855" height="1084" extended-state="6" />
@@ -421,8 +411,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/cuda_bellman_ford.cu">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="471">
-          <caret line="202" column="29" lean-forward="false" selection-start-line="202" selection-start-column="29" selection-end-line="202" selection-end-column="29" />
+        <state relative-caret-position="-343">
+          <caret line="186" column="26" lean-forward="false" selection-start-line="186" selection-start-column="26" selection-end-line="186" selection-end-column="26" />
           <folding />
         </state>
       </provider>
