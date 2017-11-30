@@ -1,7 +1,7 @@
 /**
- * Name:
- * Student id:
- * ITSC email:
+ * Name: Mu Cong DING
+ * Student id: 20323458
+ * ITSC email: mcding@connect.ust.hk
  */
 /*
  * This is a CUDA version of bellman_ford algorithm
@@ -26,6 +26,17 @@ using std::cout;
 using std::endl;
 
 #define INF 1000000
+
+
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
+{
+	if (code != cudaSuccess)
+	{
+		fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+		if (abort) exit(code);
+	}
+}
 
 /*
  * This is a CHECK function to check CUDA calls
@@ -96,6 +107,34 @@ int print_result(bool has_negative_cycle, int *dist) {
 
 // you may add some helper/kernel functions here.
 
+__device__ int d_n;
+__device__ bool d_has_negative_cycle;
+__device__ bool d_has_change;
+__device__ int d_test;
+
+/**
+ * function: BellmanIteration
+ */
+__global__ void BellmanIteration(int *d_mat, int *d_dist) {
+	int tid = blockDim.x * blockIdx.x + threadIdx.x;
+	int elementSkip = blockDim.x * gridDim.x;
+
+	printf("LOG: %d, %d, %d\n", tid, elementSkip, d_n);
+	d_test++;
+
+	for (int i = tid; i < d_n * d_n; i += elementSkip) {
+		int weight = d_mat[i];
+		int u = i / d_n;
+		int v = i - d_n * u;
+		if (weight < 1000000) {//test if u--v has an edge
+			if (d_dist[u] + weight < d_dist[v]) {
+				d_has_change = true;
+				d_dist[v] = d_dist[u] + weight;
+			}
+		}
+	}
+}
+
 /**
  * Bellman-Ford algorithm. Find the shortest path from vertex 0 to other vertices.
  * @param blockPerGrid number of blocks per grid
@@ -108,6 +147,49 @@ int print_result(bool has_negative_cycle, int *dist) {
 void bellman_ford(int blocksPerGrid, int threadsPerBlock, int n, int *mat, int *dist, bool *has_negative_cycle) {
 	//------your code starts from here------
 
+	//assert config parameters
+	assert(4<= blocksPerGrid && blocksPerGrid <=32);
+	assert(32<= threadsPerBlock && threadsPerBlock <= 1024);
+
+	dim3 blocks(blocksPerGrid);
+	dim3 threads(threadsPerBlock);
+
+	//allocate memory
+	int *d_mat, *d_dist;
+	gpuErrchk(cudaMalloc(&d_mat, sizeof(int) * n * n));
+	gpuErrchk(cudaMalloc(&d_dist, sizeof(int) * n));
+
+	//initialization and copy data from host to device
+	for (int i = 0; i < n; i++) {
+		dist[i] = INF;
+	}
+	//root vertex always has distance 0
+	dist[0] = 0;
+
+	gpuErrchk(cudaMemcpyToSymbol(d_n, &n, sizeof(int), 0, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_mat, mat, sizeof(int) * n * n, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_dist, dist, sizeof(int) * n, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemset(&d_has_change, 0, sizeof(bool)));
+	gpuErrchk(cudaMemset(&d_has_negative_cycle, 0, sizeof(bool)));
+	gpuErrchk(cudaMemset(&d_test, 0, sizeof(int)));
+
+
+	//bellman-ford edge relaxation
+	for (int i = 0; i < n - 1; i++) {// n - 1 iteration
+		BellmanIteration << < blocks, threads >> > (d_mat, d_dist);
+		gpuErrchk(cudaDeviceSynchronize()); //only for debug
+		int test;
+		gpuErrchk(cudaMemcpyFromSymbol(&test, d_test, sizeof(int), cudaMemcpyDeviceToHost));
+		printf("%d\n", test);
+	}
+
+	//copy results from device to host
+	gpuErrchk(cudaMemcpy(dist, d_dist, sizeof(int) * n, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpyFromSymbol(has_negative_cycle, d_has_negative_cycle, sizeof(bool), cudaMemcpyDeviceToHost));
+
+	//free memory
+	gpuErrchk(cudaFree(d_mat));
+	gpuErrchk(cudaFree(d_dist));
 	//------end of your code------
 }
 
